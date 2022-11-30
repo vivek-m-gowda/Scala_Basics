@@ -29,8 +29,8 @@ object PackagingAndImports extends App{
 
   //
 
-  val date = new Date
-  val sqlDate = new java.sql.Date(1988,2,28)
+//  val date = new Date
+//  val sqlDate = new java.sql.Date(1988,2,28)
 
 
 

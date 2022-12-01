@@ -1040,11 +1040,258 @@ OBJECT-ORIENTED PROGRAMMING IN SCALA
 			val sqlDate = new java.sql.Date(1988,2,28)
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
 FUNCTIONAL PROGRAMMING IN SCALA
 
 3.1 What's a Function, Really?
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+>>	To use functions as first class elements
+
+>>	In java to define function we used to create function like class
+
+			trait MyFunction[A, B]{
+			  def apply(element: A): B
+			}
+
+			val doubler = new MyFunction[Int, Int]{
+				override def apply(element: Int): Int = element * 2
+			}
+			println(doubler(2)) //doubler acts like a function
+
+>>	function types = Function1[A, B] can call unto 22 functions
+
+			val stringToIntConverter = new Function1[String, Int]{
+				override def apply(string: String): Int = string.toInt
+			}
+			println(stringToIntConverter("3") + 4)
+
+>>	ALL SCALA FUNCTIONS ARE OBJECTS
+
+>>	=> is the "function arrow". It is used both in function type signatures as well as anonymous function terms.
+
+>>	Exercises:
+					1.  a function which takes 2 strings and concatenates them
+					2.  transform the MyPredicate and MyTransformer into function types
+					3.  define a function which takes an int and returns another function which takes an int and returns an int
+							- what's the type of this function
+							- how to do it
+	
+>>	Solutions
+					1.
+						def concatenator: (String, String) => String = new Function2[String, String, String] {
+							override def apply(v1: String, v2: String): String = v1 + v2
+						}
+						println(concatenator("hello", "Scala"))
+					
+					2. Sloved in MyList file
+					
+					3. 
+						val supperAdder: Function1[Int, Function1[Int, Int]] = new Function[Int, Function1[Int, Int]] {
+							override def apply(x: Int): Function1[Int, Int] = new Function1[Int, Int] {
+								override def apply(y: Int): Int = x + y
+						}
+						}
+						val adder3 = supperAdder(3)
+						println(adder3(4))
+						println(supperAdder(3)(4))  //curried function		
+						
+>>	Syntactic Sugar is syntax within a programming language that is designed to make things easier to read or to express.
+		we use more Syntactic Sugar 
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+3.2	Anonymous Functions
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+>>	An anonymous function is also known as a literal function. A function that does not contain a name is known as an anonymous function. 
+		An anonymous function provides a lightweight function definition. It is useful when we want to create an inline function.
+
+>>	Anonymous function (LAMBDA)
+			val doubler = (x: Int) => x * 2 //Or val doubler: Int => Int = (x: Int) => x * 2
+
+>>	multiple parms in lambda
+			val adder= (a:Int, b: Int) => a + b //Or  val adder: (Int, Int) => Int (a:Int, b: Int) => a + b
+
+>>	no parms
+			val justDoSomething = () => 3 //Or val justDoSomething: () => Int = () => 3
+			println(justDoSomething) //function itself
+			println(justDoSomething())  //call
+
+>>	curly braces with lambdas
+			val stringToInt = {(str: String) =>
+			str.toInt
+			}
+
+>>	MOR syntactic sugar
+			val niceIncrementer: Int => Int = _ + 1 //equivalent to x => x + 1
+			val niceAdder: (Int, Int) => Int = _ + _ //equivalent to (a,b) => a + b
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+3.3	Higher-Order-Functions and Curries
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+>>	Higher order functions take other functions as parameters or return a function as a result. 
+		This is possible because functions are first-class values in Scala.
+
+>>	Also refer https://docs.scala-lang.org/tour/higher-order-functions.html
+
+>>	A function that takes function as parameters and returns function as results is called HOF
+		example of HOF are map, flatmap, filters
+
+			val superFunction: (Int, (String, (Int => Boolean)) => Int => (Int => Int)) = null
+
+		* simpler example of HOF
+		* unction that applies a function n times over a value x
+			// nTimes(f, n, x)
+			// nTimes(f, 3, x) = f(f(f(x))) = nTimes(f, 2, f(x)) = f(f(f(x)))
+			// nTimes(f, n, x) = f(f(...f(x))) = nTimes(f, n-1, f(x))
+
+			def nTimes(f: Int => Int, n: Int, x: Int): Int =
+				if(n <= 0) x
+				else nTimes(f, n-1, f(x))
+
+			val plusOne = (x: Int) => x + 1
+			println(nTimes(plusOne, 10, 1))
+
+			// ntb(f,n) = x => f(f(f...(x)))
+			// increment10 = ntb(plusOne, 10) = x => plusOne(plusOne....(x))
+			// val y = increment10(1)
+			def nTimesBetter(f: Int => Int, n: Int): (Int => Int) =
+				if (n <= 0) (x: Int) => x
+				else (x: Int) => nTimesBetter(f, n - 1)(f(x))
+
+			val plus10 = nTimesBetter(plusOne, 100000)
+			println(plus10(1))
+			
+>>	 curried functions which takes multiple parmetes list
+
+		val superAdder: Int => (Int => Int) = (x: Int) => (y: Int) => x + y
+		val add3 = superAdder(3) // y => 3 + y
+		println(add3(10))
+		println(superAdder(3)(10))
+
+>>	functions with multiple parameter lists example
+		def curriedFormatter(c: String)(x: Double): String = c.format(x)
+
+		val standardFormat: (Double => String) = curriedFormatter("%4.2f")
+		val preciseFormat: (Double => String) = curriedFormatter("%10.8f")
+
+		println(standardFormat(Math.PI))
+		println(preciseFormat(Math.PI))	
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+3.4	Map, flatMap, filter and for-comprehensions
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+>>	The List type is a linear, immutable sequence. This just means that it’s a linked-list that you can’t modify. 
+		Any time you want to add or remove List elements, you create a new List from an existing List.
+
+>>	REFER https://www.scala-lang.org/api/current/scala/collection/immutable/List.html
+
+>>	.map
+		When map is applied on some collection of type A, it returns a new collection of the same type with elements of type B.
+
+			val list = List(1,2,3) // this is calling apply method on companion object
+			println(list)
+			// map
+			println(list.map(_ + 1)) // returns List (same type) of type Int
+			println(list.map(_ + " is a number")) // returns List (same type) of type String
+
+>>	.filter
+		Takes a lambda that takes one param and returns boolean. Values are filtered when boolean is true.
+
+			println(list.filter(_ % 2 == 0)) // prints 2
+
+>>	.flatMap
+		flatten (reduces) the hierarchy by one level each time it is applied
+
+			val toPair = (x: Int) => List(x, x+1)
+			println(list.flatMap(toPair))
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+3.5	Sequences: List, Array, Vector
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+>>	Sequence
+			val aSequence = Seq(1, 3, 2, 4)
+			println(aSequence)
+			println(aSequence.reverse)
+			println(aSequence(2))
+			println(aSequence ++ Seq(7, 5, 6))
+			println(aSequence.sorted)
+
+>>	Ranges
+			val aRange: Seq[Int] = 1 until 10 //1 to 10 also works
+			aRange.foreach(println)
+
+			(1 to 10).foreach(x => println("Hello"))
+
+>>	lists
+			val aList = List(1, 2, 3)
+			val prepended = 42 +: aList :+ 89 // to prepend we can use :: or +: operators  // :+ to append
+			println(prepended)
+
+			val apples5 = List.fill(5)("apple")
+			println(apples5)
+			println(aList.mkString("-|-"))
+
+>>	arrays
+			val numbers = Array(1, 2, 3, 4)
+			val threeElements = Array.ofDim[String](3)
+			threeElements.foreach(println)
+
+>>	mutation
+		numbers(2) = 0 // syntax sugar for numbers.update(2, 0)
+		println(numbers.mkString(" "))
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+3.6	Tuples and Maps
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+>>	A tuple is a sequence of values:
+>>	A cool feature is a compound assignment that extracts the components of a tuple and assigns them to variables or constants:
+
+>>	tuples are finite ordered "lists"
+>>	Tuple2[Int, String] = (Int, String)
+>>	tuples grouped upto 22
+
+			val aTuple = (2, "hello Scala")
+			println(aTuple._1) // 2
+			println(aTuple.copy(_2 = "goodbye Java"))
+			println(aTuple.swap) // ("hello, Scala", 2)
+
+>>	A map is a collection of key-value pairs, usually implemented as a tree or hash table.
+>>	By default, maps are immutable. This means that once created, pairs can't be added, removed, or modified:
+
+			// Maps - keys -> values
+			val aMap: Map[String, Int] = Map()
+
+			val phonebook = Map(("Jim", 555), "Daniel" -> 789, ("JIM", 9000)).withDefaultValue(-1)
+			// a -> b is sugar for (a, b)
+			println(phonebook)
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+3.7	Options 
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+>>	Special types of collections
+
+>>	An options is a wrapper for a value that might be present or not
+
+>>	Scala Option[ T ] is a container for zero or one element of a given type. An Option[T] can be either Some[T] or None object, which represents a missing value.
+
+>>	Represents optional values. Instances of Option are either an instance of scala.Some or the object None.
+
+>>	The most idiomatic way to use an scala.Option instance is to treat it as a collection or monad and use map,flatMap, filter, or foreach:
+
+			val name: Option[String] = request getParameter "name"
+			val upper = name map { _.trim } filter { _.length != 0 } map { _.toUpperCase }
+			println(upper getOrElse "")
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+3.7	Handling Failure 
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+>>	
 
 
 

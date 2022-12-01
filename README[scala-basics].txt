@@ -1291,7 +1291,49 @@ FUNCTIONAL PROGRAMMING IN SCALA
 3.7	Handling Failure 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
->>	
+>>	  // create success and failure
+			val aSuccess = Success(3)
+			val aFailure = Failure(new RuntimeException("SUPER FAILURE"))
+
+			println(aSuccess)
+			println(aFailure)
+
+			def unsafeMethod(): String = throw new RuntimeException("NO STRING FOR YOU BUSTER")
+
+>>	Try objects via the apply method
+			val potentialFailure = Try(unsafeMethod())
+			println(potentialFailure)
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+PATTERN MATCHING
+
+4.1 Pattern Matching
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+>>	Pattern matching is a mechanism for checking a value against a pattern. 
+		A successful match can also deconstruct a value into its constituent parts. 
+		It is a more powerful version of the switch statement in Java and it can likewise be used in place of a series of if/else statements.
+			
+			import scala.util.Random
+			val x: Int = Random.nextInt(10)
+
+			x match
+				case 0 => "zero"
+				case 1 => "one"
+				case 2 => "two"
+				case _ => "other"
+
+>>	  Decompose values
+
+			  case class Person(name: String, age: Int)
+			  val bob = Person("Bob", 25)
+
+			  val greeting = bob match {
+				case Person(n, a) if a < 21 => s"Hi, my name is $n and I can't drink in the US"
+				case Person(n, a) => s"Hi, my name is $n and I am $a years old"
+				case _ => "I don't know who I am"
+			  }
+			  println(greeting)
 
 
 
